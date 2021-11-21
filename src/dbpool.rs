@@ -1,12 +1,11 @@
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::fs::{File, OpenOptions};
-use std::sync::Arc;
 use warp::Filter;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub(crate) struct Student {
-    id: i64,
+    pub(crate) id: i64,
     name: String,
     level: String,
 }
@@ -17,31 +16,36 @@ impl Student {
     }
 }
 
-pub(crate) struct DbPool {
-    pub(crate) students: Vec<Student>,
-    pub(crate) path: String,
-}
+const JSON_FILE: &str = "data/students.json";
+
+#[derive(Copy, Clone)]
+pub(crate) struct DbPool;
 
 impl DbPool {
-    pub fn new(path: &str) -> Self {
-        let file = File::open(path).map_err(|err| println!("{}", err));
+    pub(crate) fn new() -> Self {
+        Self
+    }
+
+    pub(crate) fn get_db_path(self) -> String {
+        std::env::var("DATABASE_PATH").unwrap_or(JSON_FILE.to_string())
+    }
+
+    pub(crate) fn load(self) -> Vec<Student> {
+        let file = File::open(self.get_db_path()).map_err(|err| println!("{}", err));
         let mut students = Vec::<Student>::new();
 
         if let Ok(file) = file {
             students = serde_json::from_reader(file).unwrap_or(students);
         }
 
-        Self {
-            students,
-            path: path.to_string(),
-        }
+        students
     }
 }
 
 pub(crate) fn with_db_pool(
-    db_pool: Arc<DbPool>,
-) -> impl Filter<Extract = (Arc<DbPool>,), Error = Infallible> + Clone {
-    warp::any().map(move || db_pool.clone())
+    db_pool: DbPool,
+) -> impl Filter<Extract = (DbPool,), Error = Infallible> + Clone {
+    warp::any().map(move || db_pool)
 }
 
 pub(crate) fn save_db(path: String, students: Vec<Student>) -> Result<(), serde_json::Error> {

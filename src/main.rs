@@ -5,20 +5,18 @@ mod student;
 
 use crate::dbpool::DbPool;
 use crate::student::student_filter;
-use std::sync::Arc;
 use warp::Filter;
 
 const WEB_FOLDER: &str = "web_folder/";
 const JS_FOLDER: &str = "js/";
 const CSS_FOLDER: &str = "css/";
-const JSON_FILE: &str = "data/students.json";
 
 #[tokio::main]
 async fn main() {
-    let db_pool = Arc::new(DbPool::new(JSON_FILE));
+    let db_pool = DbPool::new();
 
     // APIS
-    let apis = student_filter(db_pool.clone());
+    let apis = student_filter(db_pool);
 
     // Static Content
     let web = warp::path::end()
