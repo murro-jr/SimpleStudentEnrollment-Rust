@@ -10,7 +10,9 @@ pub(crate) fn student_filter<'a>(
     db_pool: DbPool,
 ) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
     let root = warp::path("students");
-    // LIST todos
+
+    // @desc    Lists all registered student info
+    // @route   GET /students
     let list = root
         .and(warp::get())
         .and(warp::path::end())
@@ -18,6 +20,8 @@ pub(crate) fn student_filter<'a>(
         .and(with_db_pool(db_pool))
         .and_then(find_all);
 
+    // @desc    Gets specific student info
+    // @route   GET /students/:index
     let get = root
         .and(warp::get())
         .and(do_auth())
@@ -25,6 +29,8 @@ pub(crate) fn student_filter<'a>(
         .and(warp::path::param()) // e.g., /todos/123
         .and_then(get_student);
 
+    // @desc    Registers new student info
+    // @route   POST /students
     let create = root
         .and(warp::post())
         .and(do_auth())
@@ -32,6 +38,8 @@ pub(crate) fn student_filter<'a>(
         .and(warp::body::json())
         .and_then(create_student);
 
+    // @desc    Updates an existing student info
+    // @route   PUT /students
     let update = root
         .and(warp::put())
         .and(do_auth())
@@ -39,6 +47,8 @@ pub(crate) fn student_filter<'a>(
         .and(warp::body::json())
         .and_then(update_student);
 
+    // @desc    Deletes a specific student info
+    // @route   DELETE /students
     let delete = root
         .and(warp::delete())
         .and(do_auth())
@@ -49,12 +59,21 @@ pub(crate) fn student_filter<'a>(
     list.or(get).or(create).or(update).or(delete)
 }
 
+// @desc    Method to retrieve all info from database
+// @params
+//      #TODO UserCtx -> User authorization to access database
+//      db_pool: DbPool -> Database instance
 async fn find_all(_user_ctx: UserCtx, db_pool: DbPool) -> Result<Json, warp::Rejection> {
     let students = db_pool.load();
     let todos = warp::reply::json(&students);
     Ok(todos)
 }
 
+// @desc    Method to get a specific student info from database
+// @params
+//      #TODO UserCtx -> User authorization to access database
+//      db_pool: DbPool -> Database instance
+//      id: i64 -> Student ID
 async fn get_student(
     _user_ctx: UserCtx,
     db_pool: DbPool,
@@ -68,6 +87,11 @@ async fn get_student(
     Ok(todo)
 }
 
+// @desc    Method to create a specific student info into the database
+// @params
+//      #TODO UserCtx -> User authorization to access database
+//      db_pool: DbPool -> Database instance
+//      data: Value -> JSON value received from request
 async fn create_student(
     _user_ctx: UserCtx,
     db_pool: DbPool,
@@ -99,6 +123,11 @@ async fn create_student(
     }
 }
 
+// @desc    Method to create a specific student info into the database
+// @params
+//      #TODO UserCtx -> User authorization to access database
+//      db_pool: DbPool -> Database instance
+//      data: Value -> JSON value received from request
 async fn update_student(
     _user_ctx: UserCtx,
     db_pool: DbPool,
@@ -138,6 +167,11 @@ async fn update_student(
     }
 }
 
+// @desc    Method to create a specific student info into the database
+// @params
+//      #TODO UserCtx -> User authorization to access database
+//      db_pool: DbPool -> Database instance
+//      id: i64 -> Student ID
 async fn delete_student(
     _user_ctx: UserCtx,
     db_pool: DbPool,
