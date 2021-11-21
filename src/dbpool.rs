@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
-use std::fs::{File, OpenOptions};
+use std::fs::{remove_file, File, OpenOptions};
 use warp::Filter;
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct Student {
     pub(crate) id: i64,
     name: String,
@@ -48,11 +48,19 @@ pub(crate) fn with_db_pool(
     warp::any().map(move || db_pool)
 }
 
-pub(crate) fn save_db(path: String, students: Vec<Student>) -> Result<(), serde_json::Error> {
+pub(crate) fn save_db(path: String, students: Vec<Student>) -> Result<(), String> {
+    let _result = remove_file(path.clone()).map_err(|err| println!("{}", err));
+
     let file = OpenOptions::new()
         .write(true)
         .create(true)
         .open(path)
-        .map_err(|err| println!("{}", err));
-    serde_json::ser::to_writer_pretty(file.unwrap(), &students)
+        .map_err(|err| format!("{}", err));
+
+    match file {
+        Ok(file) => {
+            serde_json::ser::to_writer_pretty(file, &students).map_err(|err| format!("{}", err))
+        }
+        Err(err) => Err(err),
+    }
 }

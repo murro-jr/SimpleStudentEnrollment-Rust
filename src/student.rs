@@ -32,7 +32,14 @@ pub(crate) fn student_filter<'a>(
         .and(warp::body::json())
         .and_then(create_student);
 
-    list.or(get).or(create)
+    let update = root
+        .and(warp::put())
+        .and(do_auth())
+        .and(with_db_pool(db_pool))
+        .and(warp::body::json())
+        .and_then(update_student);
+
+    list.or(get).or(create).or(update)
 }
 
 async fn find_all(_user_ctx: UserCtx, db_pool: DbPool) -> Result<Json, warp::Rejection> {
@@ -76,6 +83,45 @@ async fn create_student(
                 Ok(todo)
             } else {
                 Err(warp::reject::custom(error::ServerFailure))
+            }
+        }
+        Err(err) => {
+            println!("{}", err);
+            Err(warp::reject::custom(error::InvalidID))
+        }
+    }
+}
+
+async fn update_student(
+    _user_ctx: UserCtx,
+    db_pool: DbPool,
+    data: Value,
+) -> Result<Json, warp::Rejection> {
+    let id = data["id"].to_string().replace("\"", "");
+    let name = data["name"].to_string().replace("\"", "");
+    let level = data["level"].to_string().replace("\"", "");
+
+    println!("Updating student info: {:?}", data);
+    match id.parse::<i64>() {
+        Ok(id) => {
+            let student = Student::new(id, name, level);
+
+            let mut students = db_pool.load();
+            let index = students.clone().into_iter().position(|s| s.id == id);
+
+            if let Some(index) = index {
+                students[index] = student.clone();
+
+                println!("Updated list: {:?}", students);
+
+                if save_db(db_pool.get_db_path(), students.clone()).is_ok() {
+                    let todo = warp::reply::json(&student);
+                    Ok(todo)
+                } else {
+                    Err(warp::reject::custom(error::ServerFailure))
+                }
+            } else {
+                Err(warp::reject::custom(error::NotFound))
             }
         }
         Err(err) => {

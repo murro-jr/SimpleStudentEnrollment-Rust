@@ -12,3 +12,8 @@ impl warp::reject::Reject for InvalidID {}
 pub struct ServerFailure;
 
 impl warp::reject::Reject for ServerFailure {}
+
+#[derive(Debug)]
+pub struct NotFound;
+
+impl warp::reject::Reject for NotFound {}
