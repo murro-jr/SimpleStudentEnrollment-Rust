@@ -1,3 +1,4 @@
+use crate::error::FailAuth;
 use warp::Filter;
 
 const HEADER_XAUTH: &str = "X-Auth-Token";
@@ -26,8 +27,3 @@ pub fn do_auth() -> impl Filter<Extract = (UserCtx,), Error = warp::Rejection> +
 pub struct UserCtx {
     pub user_id: i64,
 }
-
-#[derive(Debug)]
-pub struct FailAuth;
-
-impl warp::reject::Reject for FailAuth {}
