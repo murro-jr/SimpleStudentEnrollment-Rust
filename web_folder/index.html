@@ -3,9 +3,44 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="./css/stylesheet.css">
 	<title>TEST</title>
 </head>
-<body>
-    Welcome to my test server!
+<body onload="init()">
+	<div class="header">
+		<h1>Student Enrollment</h1>
+	</div>
+	<form id="enrollmentForm">
+		<div class="enrollmentGroup">
+			<label id="studentName" for="inputName">Student Name:</label>
+			<input type="text" name="inputName" id="inputName">
+		</div>
+		<div class="enrollmentGroup">
+			<label id="studentId" for="inputId">Student ID:</label>
+			<input type="text" name="inputId" id="inputId">
+		</div>
+		<div class="enrollmentGroup">
+			<label id="yearLevel" for="inputYearLevel">Year Level:</label>
+			<select id="inputYearLevel">
+				<option>First Year</option>
+				<option>Second Year</option>
+				<option>Third Year</option>
+				<option>Fourth Year</option>
+				<option>Fifth Year</option>
+			</select>
+		</div>
+	</form>
+	<button id="saveButton" onclick="saveInfo()">Save</button>
+	<button id="updateButton" onclick="updateInfo()">Update</button>
+	<button onclick="showStudents()">Show</button>
+	<table id="studentTable">
+		<tr>
+			<th>ID</th>
+			<th>Name</th>
+			<th>Year Level</th>
+			<th>Action</th>
+		</tr>
+	</table>
 </body>
+<script type="text/javascript" src="./js/index.js"></script>
 </html>

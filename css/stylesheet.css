@@ -1,0 +1,28 @@
+.header {
+	border:  5px outset red;
+	background-color: lightblue;
+	text-align:  center;
+}
+
+#enrollmentForm {
+	margin-top: 10px;
+}
+
+form { display:  table; }
+.enrollmentGroup { display: table-row; }
+label { display: table-cell; }
+input { display: table-cell; }
+
+button {
+	margin-top: 6px;
+	margin-left: 5px;
+}
+
+table {
+	margin-top: 20px;
+	width: 100%;
+}
+
+table, th, td {
+	border: 1px solid black;
+}
