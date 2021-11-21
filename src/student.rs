@@ -3,7 +3,7 @@ use crate::{
     error,
     security::{do_auth, UserCtx},
 };
-use serde_json::Value;
+use serde_json::{json, Value};
 use warp::{reply::Json, Filter};
 
 pub(crate) fn student_filter<'a>(
@@ -39,7 +39,14 @@ pub(crate) fn student_filter<'a>(
         .and(warp::body::json())
         .and_then(update_student);
 
-    list.or(get).or(create).or(update)
+    let delete = root
+        .and(warp::delete())
+        .and(do_auth())
+        .and(with_db_pool(db_pool))
+        .and(warp::path::param())
+        .and_then(delete_student);
+
+    list.or(get).or(create).or(update).or(delete)
 }
 
 async fn find_all(_user_ctx: UserCtx, db_pool: DbPool) -> Result<Json, warp::Rejection> {
@@ -128,5 +135,27 @@ async fn update_student(
             println!("{}", err);
             Err(warp::reject::custom(error::InvalidID))
         }
+    }
+}
+
+async fn delete_student(
+    _user_ctx: UserCtx,
+    db_pool: DbPool,
+    id: i64,
+) -> Result<Json, warp::Rejection> {
+    let mut students = db_pool.load();
+    let index = students.clone().into_iter().position(|s| s.id == id);
+
+    if let Some(index) = index {
+        students.remove(index);
+
+        if save_db(db_pool.get_db_path(), students.clone()).is_ok() {
+            let todo = warp::reply::json(&json!({ "message": "Deleted student info" }));
+            Ok(todo)
+        } else {
+            Err(warp::reject::custom(error::ServerFailure))
+        }
+    } else {
+        Err(warp::reject::custom(error::NotFound))
     }
 }
